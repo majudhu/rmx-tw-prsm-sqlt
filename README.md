@@ -39,3 +39,29 @@ npm run deploy
 You can run `flyctl info` to get the url and ip address of your server.
 
 Check out the [fly docs](https://fly.io/docs/getting-started/node/) for more information.
+
+## Prisma
+
+1. Setup local database
+
+```sh
+npm run prisma generate
+```
+
+2. Apply schema changes during development
+
+```sh
+npm run prisma db push
+```
+
+3. Create migration when done
+
+```sh
+npm run prisma migrate dev -n name
+```
+
+4. Apply migration on deployment
+
+```sh
+npm run prisma migrate deploy
+```
