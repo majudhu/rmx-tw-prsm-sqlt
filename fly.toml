@@ -46,10 +46,11 @@ processes = []
   grace_period = "5s"
   method = "post"
   path = "/?index"
-  protocol = "https"
+  protocol = "http"
   timeout = "2s"
   tls_skip_verify = false
   headers = { }
 
 [[statics]]
   guest_path = "/app/public"
+  url_prefix = "/"
