@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # base node image
 FROM node:lts-alpine as base
 
@@ -6,51 +7,38 @@ RUN --mount=type=cache,id=apk,target=/var/cache/apk apk upgrade && apk add opens
 RUN --mount=type=cache,id=node,target=/root/.node corepack enable && corepack prepare pnpm@latest --activate
 
 ENV NODE_ENV production
+ENV CI 1
+ARG PNPM=/root/.local/share/pnpm/store
 
-# Install all node_modules, including dev dependencies
-FROM base as deps
-
-RUN mkdir /app
-WORKDIR /app
-
-ADD package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install --production=false
-
-# Setup production node_modules
+# Setup production node_modules 
 FROM base as production-deps
 
 RUN mkdir /app
 WORKDIR /app
 
-COPY --from=deps /app/node_modules /app/node_modules
-ADD package.json pnpm-lock.yaml ./
-RUN pnpm prune --prod
+COPY --link package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=$PNPM pnpm install
+
+COPY --link prisma ./
+RUN pnpm prisma generate
 
 # Build the app
-FROM base as build
+FROM production-deps as build
 
-RUN mkdir /app
-WORKDIR /app
+RUN --mount=type=cache,id=pnpm,target=$PNPM pnpm install --production=false
 
-COPY --from=deps /app/node_modules /app/node_modules
-
-ADD prisma .
-RUN pnpm exec prisma generate
-
-ADD . .
+COPY --link . .
 RUN pnpm build
 
 # Finally, build the production image with minimal footprint
 FROM base
 
-ENV NODE_ENV production
-
 RUN mkdir /app
 WORKDIR /app
 
-COPY --from=production-deps /app/node_modules /app/node_modules
-COPY --from=build /app/build /app/build
-COPY --from=build /app/public /app/public
-ADD . .
+COPY --link --from=production-deps /app/node_modules /app/node_modules
+COPY --link --from=build /app/build /app/build
+COPY --link --from=build /app/public /app/public
+COPY --link . .
 
 CMD "./start_with_migrations.sh"
