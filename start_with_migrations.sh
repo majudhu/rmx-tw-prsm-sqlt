@@ -1,5 +1,5 @@
 #!/bin/sh
 
 set -ex
-pnpm prisma migrate deploy
-pnpm start
+npx prisma migrate deploy
+npm run start

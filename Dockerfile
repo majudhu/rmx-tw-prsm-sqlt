@@ -20,7 +20,7 @@ COPY --link package.json pnpm-lock.yaml ./
 RUN --mount=type=cache,id=pnpm,target=$PNPM pnpm install
 
 COPY --link prisma ./
-RUN pnpm prisma generate
+RUN pnpx prisma generate
 
 # Build the app
 FROM production-deps as build
