@@ -50,7 +50,3 @@ processes = []
   timeout = "2s"
   tls_skip_verify = false
   headers = { }
-
-[[statics]]
-  guest_path = "/app/public"
-  url_prefix = "/"
